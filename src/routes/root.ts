@@ -7,11 +7,11 @@ router.get("/ping", (req, res) => {
 })
 
 router.post("/login", (req, res) => {
-    return
+    res.json("");
 });
 
 router.post("/register", (req, res) => {
-    return
+    res.json("");
 });
 
 export { router as rootRouter };
