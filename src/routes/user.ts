@@ -11,23 +11,23 @@ all.get((req, res) => {
 });
 
 all.post((req, res) => {
-    res.json("")
+    res.json("");
 });
 
 const one = router.route("/:id");
 
 one.get((req, res) => {
-    res.json("")
+    res.json("");
 });
 
 one.post((req, res) => {
-    res.json("")
+    res.json("");
 });
 
 one.put((req, res) => {
-    res.json("")
+    res.json("");
 });
 
 one.delete((req, res) => {
-    res.json("")
+    res.json("");
 });
