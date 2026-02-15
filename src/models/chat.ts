@@ -8,13 +8,11 @@ export const CHAT_STATUS = {
 export type CHAT_STATUS = typeof CHAT_STATUS[keyof typeof CHAT_STATUS]
 
 const chatSchema = new Schema({
-    title: {
-        type: String,
-        required: true
-    },
+    title: String,
     status: {
         type: String,
-        enum: Object.values(CHAT_STATUS)
+        enum: Object.values(CHAT_STATUS),
+        default: CHAT_STATUS.ACTIVE
     },
     members: [{
         type: Types.ObjectId,

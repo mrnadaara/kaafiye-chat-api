@@ -1,33 +1,43 @@
-import { Router } from "express";
+import { Request, Router } from "express";
 import { authMiddleware } from "../middlewares/authentication";
+import User, { UpdateUserBody } from "../models/user";
 
 const router = Router();
 router.use(authMiddleware);
 
-const all = router.route("/");
+const userRoute = router.route("/:userId");
 
-all.get((req, res) => {
-    res.json([]);
+userRoute.get(async (req, res) => {
+    const userId = req.params.userId;
+    if (req.payload.sub !== userId) {
+        return res.status(403).json("Cannot fulfill your request")
+    }
+    const user = await User.findById(userId);
+    res.json(user);
 });
 
-all.post((req, res) => {
-    res.json("");
+userRoute.put(async (req: Request<{userId: string}, any, UpdateUserBody>, res) => {
+    const userId = req.params.userId;
+    if (req.payload.sub !== userId) {
+        return res.status(403).json("Cannot fulfill your request")
+    }
+    await User.findByIdAndUpdate(userId, {
+        name: req.body.name,
+        username: req.body.username,
+        dateOfBirth: req.body.dateOfBirth,
+    })
+    res.json("Updated your details");
 });
 
-const one = router.route("/:id");
+const friendRoute = router.route("/:userId/friend");
 
-one.get((req, res) => {
-    res.json("");
+friendRoute.get(async (req, res) => {
+    const userId = req.params.userId;
+    if (req.payload.sub !== userId) {
+        return res.status(403).json("Cannot fulfill your request")
+    }
+    const friends = await User.findById(userId).select("friends").populate("friends", "username");
+    res.json(friends);
 });
 
-one.post((req, res) => {
-    res.json("");
-});
-
-one.put((req, res) => {
-    res.json("");
-});
-
-one.delete((req, res) => {
-    res.json("");
-});
+export { router as singleUserRouter }
