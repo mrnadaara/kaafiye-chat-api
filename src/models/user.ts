@@ -37,13 +37,14 @@ const userSchema = new Schema({
     },
     verified: {
         type: Boolean,
-        default: false
+        default: false,
     },
     dateOfBirth: Date,
     friends: [{
         type: Types.ObjectId,
         ref: USER_MODEL,
         select: false,
+        cast: "Not a valid friend ID",
     }],
     chats: [{
         type: Types.ObjectId,
@@ -64,6 +65,20 @@ const SALT_ROUNDS = 10;
 userSchema.pre("save", async function() {
   if(!this.isModified("password")) return;
   this.password = await hash(this.password, SALT_ROUNDS);
+});
+
+userSchema.pre(["updateOne", "findOneAndUpdate"], async function() {
+  const updateObj = this.getUpdate();
+  const filterObj = this.getQuery();
+
+  const friendId = updateObj["$addToSet"]?.friends;
+  if (friendId && filterObj._id) {
+    if (friendId.toString() === filterObj._id.toString()) {
+        throw new Error("Cannot add friend");
+    }
+    const friendExists = await this.model.exists({ _id: friendId });
+    if (!friendExists) throw new Error("Friend does not exist");
+  }
 });
 
 export default model(USER_MODEL, userSchema);
