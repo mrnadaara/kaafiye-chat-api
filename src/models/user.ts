@@ -66,4 +66,14 @@ userSchema.pre("save", async function() {
   this.password = await hash(this.password, SALT_ROUNDS);
 });
 
+userSchema.pre("findOneAndUpdate", async function() {
+    const updateObj = this.getUpdate();
+    console.log(updateObj)
+    const friendId = updateObj["$addToSet"]?.friends;
+    if (friendId) {
+        const friendExist = await this.model.exists({ _id: friendId });
+        if (!friendExist) throw new Error("Friend does not exist")
+    }
+});
+
 export default model(USER_MODEL, userSchema);

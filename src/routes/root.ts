@@ -23,7 +23,7 @@ router.post("/login", async (req, res) => {
         audience: jwtAudience,
         issuer: jwtIssuer,
         subject: user._id.toString(),
-        expiresIn: "20m"
+        expiresIn: "30d"
     });
 
     res.json({ token });
