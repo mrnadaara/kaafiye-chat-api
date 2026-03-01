@@ -44,6 +44,7 @@ const userSchema = new Schema({
         type: Types.ObjectId,
         ref: USER_MODEL,
         select: false,
+        cast: "Invalid friend ID"
     }],
     chats: [{
         type: Types.ObjectId,
@@ -68,9 +69,13 @@ userSchema.pre("save", async function() {
 
 userSchema.pre("findOneAndUpdate", async function() {
     const updateObj = this.getUpdate();
-    console.log(updateObj)
+    const query = this.getQuery();
+    
+    const userId = query._id;
     const friendId = updateObj["$addToSet"]?.friends;
-    if (friendId) {
+    if (friendId && userId) {
+        if (!Types.ObjectId.isValid(friendId)) throw new Error("Invalid friend ID");
+        if (friendId === userId) throw new Error("Cannot add friend");
         const friendExist = await this.model.exists({ _id: friendId });
         if (!friendExist) throw new Error("Friend does not exist")
     }

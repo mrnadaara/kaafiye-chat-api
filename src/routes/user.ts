@@ -21,7 +21,7 @@ userRoute.put(async (req: Request<{userId: string}, any, UpdateUserBody>, res) =
         name: req.body.name,
         username: req.body.username,
         dateOfBirth: req.body.dateOfBirth,
-    }, { returnDocument: "after"})
+    }, { runValidators: true, returnDocument: "after"})
     res.json(updatedUser);
 });
 
@@ -41,7 +41,18 @@ friendRoute.post(async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, {
         $addToSet: { friends: req.body.friendId }
     }, { returnDocument: "after" }).select("friends").lean().populate("friends", "username");
-    res.json(updatedUser.friends)
+    res.json(updatedUser.friends);
+});
+
+friendRoute.delete(async (req, res) => {
+    const userId = req.params.userId;
+    if(!req.body || !req.body.friendId) {
+        return res.status(400).json("Cannot add friend");
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+        $pull: { friends: req.body.friendId }
+    }, { returnDocument: "after" }).select("friends").lean().populate("friends", "username");
+    res.json(updatedUser.friends);
 });
 
 export { router as singleUserRouter }
