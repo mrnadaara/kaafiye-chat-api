@@ -25,6 +25,22 @@ userRoute.put(async (req: Request<{userId: string}, any, UpdateUserBody>, res) =
     res.json(updatedUser);
 });
 
+router.put("/:userId/change-password", async (req, res) => {
+    if (!req.body || !req.body.currentPassword || !req.body.newPassword) {
+        return res.status(400).json("Missing information")
+    }
+    const user = await User.findById(req.params.userId).select("+password");
+    if(!user) return res.status(400).json("Cannot fulfill your request");
+
+    if(!await user.isPasswordMatching(req.body.currentPassword)) {
+        return res.status(400).json("Unable to change your password, please check if you are entering the correct details")
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+    res.sendStatus(200)
+});
+
 const friendRoute = router.route("/:userId/friend");
 
 friendRoute.get(async (req, res) => {
@@ -41,7 +57,7 @@ friendRoute.post(async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, {
         $addToSet: { friends: req.body.friendId }
     }, { returnDocument: "after" }).select("friends").lean().populate("friends", "username");
-    res.json(updatedUser.friends);
+    res.json(updatedUser?.friends);
 });
 
 friendRoute.delete(async (req, res) => {
@@ -52,7 +68,7 @@ friendRoute.delete(async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, {
         $pull: { friends: req.body.friendId }
     }, { returnDocument: "after" }).select("friends").lean().populate("friends", "username");
-    res.json(updatedUser.friends);
+    res.json(updatedUser?.friends);
 });
 
 export { router as singleUserRouter }

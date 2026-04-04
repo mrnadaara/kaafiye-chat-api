@@ -55,7 +55,7 @@ const userSchema = new Schema({
     timestamps: true,
     methods: {
         isPasswordMatching(plainPassword: string) {
-            return compare(plainPassword, this.password);
+            return compare(plainPassword.toString(), this.password);
         }
     }
 });

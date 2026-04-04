@@ -15,7 +15,7 @@ const messageSchema = new Schema({
         ref: USER_MODEL
     },
     readStatus: [{
-        types: Types.ObjectId,
+        type: Types.ObjectId,
         ref: USER_MODEL
     }]
 });

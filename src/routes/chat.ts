@@ -2,6 +2,7 @@ import { Request, Router } from "express";
 import { authMiddleware } from "../middlewares/authentication";
 import Chat, { ChatType } from "../models/chat";
 import Message from "../models/message";
+import User from "../models/user";
 
 const router = Router();
 router.use(authMiddleware);
@@ -9,6 +10,11 @@ router.use(authMiddleware);
 router.get("/:userId/chat", async (req, res) => {
     const chats = await Chat.find({ members: req.params.userId });
     res.json(chats)
+});
+
+router.get("/:userId/chat/:chatId", async (req, res) => {
+    const chat = await Chat.findById(req.params.chatId);
+    res.json(chat);
 });
 
 router.post("/:userId/chat", async (req: Request<{userId: string}, any, { members: ChatType["members"]}>, res) => {
@@ -32,20 +38,40 @@ router.patch("/:userId/chat/:chatId", async (req, res) => {
 });
 
 router.get("/:userId/chat/:chatId/message", async (req, res) => {
-    const messages = await Message.find({ chatId: req.params.chatId })
+    const messages = await Message.find({ chatId: req.params.chatId }).select("message author").lean().populate("author", "name")
     res.json(messages)
 });
 
-router.post("/:userId/chat/:chatId/message", (req, res) => {
-    res.json("Add message to chat")
+router.post("/:userId/chat/:chatId/message", async (req, res) => {
+    if (!req.body || !req.body.message) return res.status(400).json("No message provided");
+
+    const chat = await Chat.findById(req.params.chatId);
+    if (!chat) return res.status(404).json("Chat not found");
+
+    const author = await User.findById(req.params.userId);
+    if (!author) return res.status(400).json("User cannot send message");
+
+    const newMessage = new Message({ author: author.id, chatId: chat.id, message: req.body.message });
+    await newMessage.save();
+    res.sendStatus(200);
 });
 
-router.patch("/:chatId/message/:messageId", (req, res) => {
-    res.json("Update message read status");
+router.patch("/:userId/chat/:chatId/message/:messageId", async (req, res) => {
+    const chat = await Chat.findById(req.params.chatId);
+    if (!chat) return res.status(404).json("Chat not found");
+
+    const reader = await User.findById(req.params.userId);
+    if (!reader) return res.status(400).json("Cannot fulfill your request");
+
+    const updatedMessage = await Message.findByIdAndUpdate(req.params.messageId, {
+        $addToSet: { readStatus: reader.id }
+    }, { returnDocument: "after" })
+    res.json(updatedMessage);
 });
 
-router.delete("/:chatId/message/:messageId", (req, res) => {
-    res.json("Delete message from chat");
+router.delete("/:userId/chat/:chatId/message/:messageId", async (req, res) => {
+    await Message.deleteOne({ _id: req.params.messageId, author: req.params.userId, chatId: req.params.chatId });
+    res.sendStatus(200);
 });
 
 export { router as chatRouter }
