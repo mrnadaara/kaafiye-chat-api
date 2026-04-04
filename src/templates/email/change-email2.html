@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Request to change email</title>
+        <style type="text/css">
+            .body {
+                display: flex;
+                flex-direction: column;
+                width: 100vw;
+                height: 100vh;
+                margin: 0;
+            }
+            .full-height-container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .fixed-container {
+                flex: 0 1 auto;
+            }
+            .content-container {
+                flex: 1;
+                min-height: 0;
+            }
+            .button {
+                font: bold 11px Arial;
+                text-decoration: none;
+                background-color: #EEEEEE;
+                color: #333333;
+                padding: 2px 6px 2px 6px;
+                border-top: 1px solid #CCCCCC;
+                border-right: 1px solid #333333;
+                border-bottom: 1px solid #333333;
+                border-left: 1px solid #CCCCCC;
+                padding: 10px 15px;
+            }
+        </style>
+    </head>
+    <body class="body">
+        <header class="fixed-container" style="display: flex;justify-content: space-between; align-items: center; width: 100%">
+            <span>Kaafiye Chat</span>
+            <h2>Change Email</h2>
+            <span>{{date}}</span>
+        </header>
+        <main class="content-container">
+            <div class="full-height-container" style="justify-content: center;align-items: center; text-align: center;">
+                <p>This email was sent to you because you have requested an email change. <br> If you have not, please ignore.</p>
+                <h4>Click the following link below to verify your new email</h4>
+                <a class="button" href="{{verifyEmailLink}}">
+                    Verify Email
+                </a>
+                <a style="margin-top: 20px;" href="{{verifyEmailLink}}">
+                    {{verifyEmailLink}}
+                </a>
+                <p>A verification request will be sent to your new email</p>
+            </div>
+        </main>
+        <footer style="text-align: center; padding: 10px 0;">
+            This is an automated mail. For any enquiries please contact us at enquiry@kaafiye-chat.so
+        </footer>
+    </body>
+</html>

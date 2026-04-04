@@ -1,7 +1,12 @@
 import { Request, Router } from "express";
+import jwt from "jsonwebtoken";
+import ejs from "ejs";
 import { authMiddleware } from "../middlewares/authentication";
 import User, { UpdateUserBody } from "../models/user";
 import { isActionForUser } from "../middlewares/isActionForUser";
+import mailtrap from "../clients/mailtrap";
+import path from "node:path";
+import { jwtAudience, jwtIssuer, jwtSecret, serverPort } from "../config";
 
 const router = Router();
 router.use(authMiddleware);
@@ -39,6 +44,44 @@ router.put("/:userId/change-password", async (req, res) => {
     user.password = req.body.newPassword;
     await user.save();
     res.sendStatus(200)
+});
+
+router.put("/:userId/change-email", async (req, res) => {
+    if (!req.body || !req.body.currentPassword || !req.body.newEmail) {
+        return res.status(400).json("Missing information")
+    }
+
+    const user = await User.findById(req.params.userId).select("+password");
+    if(!user) return res.status(400).json("Cannot fulfill your request");
+
+    if(!await user.isPasswordMatching(req.body.currentPassword)) {
+        return res.status(400).json("Cannot fulfill your request, please check if you are entering the correct details")
+    }
+
+    const token = jwt.sign({ newEmail: req.body.newEmail }, jwtSecret, {
+        audience: jwtAudience,
+        issuer: jwtIssuer,
+        subject: user._id.toString(),
+        expiresIn: "1h"
+    });
+
+    const data = {
+        date: new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        }),
+        verifyEmailLink: `http://localhost:${serverPort}/verify-email?token=${token}`
+    };
+
+    const changeEmailTemplatePath = path.join(import.meta.dirname, "../templates/email/change-email.html");
+    await mailtrap.send({
+        from: { name: "Mailtrap Test", email: "sender@demomailtrap.co" },
+        to: [{ email: req.body.newEmail }],
+        subject: "Request for email change",
+        html: await ejs.renderFile(changeEmailTemplatePath, data),
+    });
+    res.json("Sent email")
 });
 
 const friendRoute = router.route("/:userId/friend");

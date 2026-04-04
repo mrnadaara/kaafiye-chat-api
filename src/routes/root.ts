@@ -45,4 +45,20 @@ router.post("/register", async (req, res) => {
     res.json({ token })
 });
 
+router.put("/verify-email", async (req, res) => {
+    if (!req.query.token) {
+        return res.status(400).json("Invalid request");
+    }
+    const decoded = jwt.verify(req.query.token.toString(), jwtSecret, {
+        audience: jwtAudience,
+        issuer: jwtIssuer
+    });
+    const user = await User.findById(decoded.sub).select("+password");
+    if(!user) return res.status(400).json("Cannot fulfill your request");
+
+    user.email = decoded.newEmail;
+    await user.save();
+    res.sendStatus(200)
+});
+
 export { router as rootRouter };
